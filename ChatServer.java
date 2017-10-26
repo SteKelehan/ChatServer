@@ -1,79 +1,49 @@
-// Implementation of simple ChatServer
-// Importing libs
-
 import java.net.*;
 import java.io.*;
 
+public class ChatServer
+{  private Socket          socket   = null;
+   private ServerSocket    server   = null;
+   private DataInputStream streamIn =  null;
 
-// Creating Server Object!
-public class ChatServer{
-    // creatring P2P vars
-    private Scoket socket = null;
-    private ServerSocket server = null;
-    private DataInputStream streamIN = null;
-
-    public ChatServer(int port){
-        try{
-            // Printing the port number and creating a socket connection
-            System.out.println("Binding to port " + port + " ....");
-            server = new ServerSocket(port);
-            System.out.println(server);
-            start();
-        }
-        catch(IOExecption ioe){
-            System.out.println(ioe);
-        }
-    }
-
-    public void run(){
-        while(thread != null){
-            try{
-                System.out.println("Weighting for client ...");
-                socket = server.accept();
-                System.out.println("Connected to CLient: " = socket);
-                open();
-                boolean done = false;
-                while(!done){
-                    try{
-                        String line = streamIn.readUTF();
-                        System.out.println(line);
-                        done = line.equals("exit chat");        // disconnects if you message server exit chat
-                    }
-                    catch{
-                        done = true;
-                    }
-                }
-                close();
+   public ChatServer(int port)
+   {  try
+      {  System.out.println("Binding to port " + port + ", please wait  ...");
+         server = new ServerSocket(port);  
+         System.out.println("Server started: " + server);
+         System.out.println("Waiting for a client ..."); 
+         socket = server.accept();
+         System.out.println("Client accepted: " + socket);
+         open();
+         boolean done = false;
+         while (!done)
+         {  try
+            {  String line = streamIn.readUTF();
+               System.out.println(line);
+               done = line.equals(".bye");
             }
-            catch(IOExecption ie){
-                System.out.println("Acceptance Error: " + ie);
+            catch(IOException ioe)
+            {  done = true;
             }
-        }
-    }
-
-
-    public void open () throws IOExecption{
-        streamIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-    }
-
-    public void close() throws IOExecption{
-        if(socket != null){
-            socket.close()
-        }
-        if(streamIn != null){
-            streamIn.close();
-        }
-    }
-
-    public static void main(String args[]){
-        ChatServer server = null;
-        if(args.lenght != 1){
-            System.out.println("Usage: java ChatServer port");
-        }
-        else{
-            server = new ChatServer(Integer.parseInt(args[0]));
-        }
-    }
-
+         }
+         close();
+      }
+      catch(IOException ioe)
+      {  System.out.println(ioe); 
+      }
+   }
+   public void open() throws IOException
+   {  streamIn = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+   }
+   public void close() throws IOException
+   {  if (socket != null)    socket.close();
+      if (streamIn != null)  streamIn.close();
+   }
+   public static void main(String args[])
+   {  ChatServer server = null;
+      if (args.length != 1)
+         System.out.println("Usage: java ChatServer port");
+      else
+         server = new ChatServer(Integer.parseInt(args[0]));
+   }
 }
-
