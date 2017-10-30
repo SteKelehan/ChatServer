@@ -8,7 +8,7 @@ import select
 #Creatring a TCP Server
 #create a socket obj
 host = 'localhost'
-port = 2345
+port = 5678
 BufferSize = 4096
 socket_list = []
 
@@ -56,16 +56,16 @@ def server():
     while True:
         # get the list of sockets
         # 4th argument, timeout = 0 :poll and never block
-        ready_to_read, ready_to_write, in_error = select.select(socket_list, [],[], 0)
+        ready_to_read, ready_to_write, in_error = select.select(socket_list, [ ],[ ], 0)
 
         for sock in ready_to_read:
             # a new connection request recived
             if sock == socket_tcp:
-                sockfd, addr = server_scoket.accept()
-                SPCLET_LIST.append(sockfd)
+                sockfd, addr = socket_tcp.accept()
+                socket_list.append(sockfd)
                 print("Connected")
 
-                broadcast(socket_tcp, sockfd, addr + " : " + addr + " entered the chat room\n")
+                broadcast(socket_tcp, sockfd, str(addr) + " : " + str(addr) + " entered the chat room\n")
             else:
                 try:
                      # process data taken form client
@@ -78,7 +78,7 @@ def server():
                              socket_list.remove(sock)
 
                          # this means that the connect is prob broken! thus close connection
-                         broadcase(socket_tcp,sock, "Client " + addr + " : " + addr + " is offline")
+                         broadcase(socket_tcp,sock, "Client " + str(addr) + " : " + str(addr) + " is offline")
 
                 except:
                     broadcast(socket_tcp,"Client " + addr + " : " + addr + " is offline")
@@ -88,7 +88,7 @@ def server():
 
 
 def broadcast (server_socket, sock, message):
-    for socket in SOCKET_LIST:
+    for socket in socket_list:
         # send message to spespic person
         if socket != server_socket and sock != sock :
             try:
@@ -96,8 +96,8 @@ def broadcast (server_socket, sock, message):
             except:
                 #broken socket connection
                 socket.close()
-                if socket in SOCKET_LIST:
-                    SOCKET_LIST.remove(socket)
+                if socket in socket_list:
+                    socket_list.remove(socket)
 
 if __name__ == "__main__":
     sys.exit(server())

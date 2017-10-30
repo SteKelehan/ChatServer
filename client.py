@@ -4,58 +4,51 @@ from SocketServer import ThreadingMixIn
 import sys
 import select
 
-def client():
-    # if the length of the command line arg is less than 3 -> exit
-    if (len(sys.argv) < 3):
-        print (" Usage : puthon chat_client.py hostname port")
+def chat_client():
+    if(len(sys.argv) < 3) :
+        print 'Usage : python chat_client.py hostname port'
         sys.exit()
 
-    #the host name is the first command line argument
     host = sys.argv[1]
-    #the port is the second command line aregument
-    port = sys.argv[2]
-    
-    print( "Host: " + host + " Port: " + port)
-
-
-    # Set up socket and set it to time out
+    port = int(sys.argv[2])
+     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #s.settimeout(2)
-
-    #connect to client/host
-    try:
-        s.connect((host,port))
-    except:
-        print("Unable to connect to host")
+    s.settimeout(2)
+     
+    # connect to remote host
+    try :
+        s.connect((host, port))
+    except :
+        print 'Unable to connect'
         sys.exit()
-
-    print("Connect to remot host, You can start to chat! Woooo")
-    # Print to comandline forces the buffer to be flushed and writes everything in the buffer even if it woulf wait nomally
+     
+    print 'Connected to remote host. You can start sending messages'
     sys.stdout.write('[Me] '); sys.stdout.flush()
-    
-    while True:
+     
+    while 1:
         socket_list = [sys.stdin, s]
-        
-        # Get list of sockets which are readable
-        ready_to_read,ready_to_write,in_error = select.select(socket_list, [] , [])
-
-        for sock in ready_to_read:
+         
+        # Get the list sockets which are readable
+        ready_to_read,ready_to_write,in_error = select.select(socket_list , [], [])
+         
+        for sock in ready_to_read:             
             if sock == s:
                 # incoming message from remote server, s
                 data = sock.recv(4096)
-                if not data:
-                    print("\nDisconnected form chat server")
+                if not data :
+                    print '\nDisconnected from chat server'
                     sys.exit()
-                else:
-                    # Print the data
+                else :
+                    #print data
                     sys.stdout.write(data)
-                    sys.stdout.write("[Me] "); sys.stdout.flush()
-            else:
-                # get message user have entered
-                message = sys.stdin.readline()
-                s.send(message)
-                sys.stdout.write("[Me] "); sys.stdout.flush()
-
+                    sys.stdout.write('[Me] '); sys.stdout.flush()     
+            
+            else :
+                # user entered a message
+                msg = sys.stdin.readline()
+                s.send(msg)
+                sys.stdout.write('[Me] '); sys.stdout.flush() 
 
 if __name__ == "__main__":
-    sys.exit(client())
+
+    sys.exit(chat_client())
