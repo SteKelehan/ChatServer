@@ -1,28 +1,30 @@
 import socket
+import time
 
-#create a socket obj
-s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-host = socket.gethostname()
+# Creating a socket object! 
+serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+# Setting localhost! -> use function to fine local machine name and set port!
+host = 'localhost'
 port = 1234
+BufferSize = 1024
 
-#Connect to hostname
-s.connect((host,port))
-s.send("Hello server!")
+# Get link to the port
+serversocket.connect((host, port))
 
-with open('file_received','wb') as f:
-    print('file opened')
-    while 1:
-        print('receiving data ..')
-        data = s.recv(1024)
-        print('data ' + data)
+with open('Received_file.txt', 'wb') as f:
+    print ('file opened')
+    while (1):
+        data = serversocket.recv(BufferSize)
+        print('data ' + data )
         if not data:
+            f.close()
+            print( 'file closed' )
             break
-        #write data to a file
         f.write(data)
 
-f.close()
-print('Successfully got the file')
-s.close()
-print('connection closed')
+print('Successfully get the file')
+serversocket.close()
+print('Connection Closed')
+
 

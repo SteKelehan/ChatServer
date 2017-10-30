@@ -1,45 +1,74 @@
 import socket
-import time
+from threading import Thread
+from SocketServer import ThreadingMixIn
 
-
-#Creating a socket object! 
-serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-#Setting localhost! -> use function to fine local machine name and set port!
-host = socket.gethostname()
-
+#Creatring a TCP Server
+#create a socket obj
+host = 'localhost'
 port = 1234
+BufferSize = 1024
 
-# Get link to the port
-serversocket.bind((host, port))
+#################################
+#                               #
+#     Create a Thread class     #            
+#                               #
+#################################
 
-# Execpt 5 requests -> use listen, listens for connects to the socket
-serversocket.listen(5)
+class ClientThread(Thread):
 
-print ('Server wating for connection..... ')
+    def __init__(self, ip, port, sock):
+        Thread.__init__(self)
+        self.ip = ip
+        self.port = port
+        self.sock = sock
+        print("New thread IP: " + ip + "Port " + str(port))
+
+    def run(self):
+        filename = 'Testfile.txt'
+        f = open(filename, 'rb')
+        while (1):
+            l = f.read(BufferSize)
+            while(l):
+                self.sock.send(l)
+                l = f.read(BufferSize)
+            if not l:
+                f.close()
+                self.sock.close()
+                break
+
+#setting up sockets
+socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# socket.setsockopt(level,optname, value) 
+socket_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+socket_tcp.bind((host, port))
+#creating an empty array of threads
+threads= []
+
+###############################################
+#                                             #
+#       Colecting data from client            #
+#                                             #
+###############################################
 
 while 1:
-    #connection, get and print address 
-    clientsocket,addr = serversocket.accept()
-    #accept() -> returns two values, one new socket obj and the address of the connection
-    print("Have connection with " + str(addr))
-    data = clientsocket.recv(1024)
-    print('Server resived' + repr(data))
-    
-    #open a file and read 1024 bytes at a time
-    filename = 'Testfile.txt'
-    f = open(filename,'rb')
-    l = f.read(1024)
-    while(l) :
-        #Sending line read from texty file l -> 1024 
-        clientsocket.send(l)
-        print('Sent' , repr(l))
-        print('\n')
-        l = f.read(1024)
-    f.close()
+    # Listen for connect to port 
+    socket_tcp.listen(5)
+    print("Awaiting connection \n")
+    #Returning two values new sock obj and address of connection 
+    (conn, (ip,port)) = socket_tcp.accept()
+    print("Connected to IP: " + str(ip) + 'Port: ' + str(port))
+    # Creadting new thread for multiple connections
+    newthread = ClientThread(ip,port,conn)
+    # starting a new thread
+    newthread.start()
+    # add to the list 
+    threads.append(newthread)
 
-    print('Finished Sending')
-    clientsocket.send('Thanks')
-    clientsocket.close()
 
+for t in threads:
+    t.join()
+
+
+
+        
 
