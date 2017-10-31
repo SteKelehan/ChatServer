@@ -4,6 +4,7 @@ from SocketServer import ThreadingMixIn
 import sys
 import select
 
+ 
 def chat_client():
     if(len(sys.argv) < 3) :
         print 'Usage : python chat_client.py hostname port'
@@ -29,7 +30,10 @@ def chat_client():
         socket_list = [sys.stdin, s]
          
         # Get the list sockets which are readable
-        ready_to_read,ready_to_write,in_error = select.select(socket_list , [], [])
+        ready_to_read,ready_to_write,in_error = select.select(socket_list,
+                                                                       [],
+                                                                       []
+                                                                       )
          
         for sock in ready_to_read:             
             if sock == s:

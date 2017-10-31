@@ -7,8 +7,8 @@ import select
 
 #Creatring a TCP Server
 #create a socket obj
-host = 'localhost'
-port = 5678
+host = ''
+port = 9090
 BufferSize = 4096
 socket_list = []
 
@@ -41,67 +41,78 @@ socket_list = []
 #                break
 
 
+def chat_server():
 
-def server():
-    
-    #setting up sockets
-    socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # socket.setsockopt(level,optname, value) 
-    socket_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    socket_tcp.bind((host, port))
-    socket_tcp.listen(10)
+    tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    tcp_socket.bind((host, port))
+    tcp_socket.listen(10)
+ 
+    # add server socket object to the list of readable connections
+    socket_list.append(tcp_socket)
+ 
+    print "Chat server started on port " + str(port)
+ 
+    while 1:
 
-    socket_list.append(socket_tcp)       # add server socket to tyhe list of readable connections
-    print("Chat server started on Port: " + str(port) + " HostName: " + str(host))
-    while True:
-        # get the list of sockets
-        # 4th argument, timeout = 0 :poll and never block
-        ready_to_read, ready_to_write, in_error = select.select(socket_list, [ ],[ ], 0)
-
+        # get the list sockets which are ready to be read through select
+        # 4th arg, time_out  = 0 : poll and never block
+        ready_to_read,ready_to_write,in_error = select.select(socket_list,
+                                                                       [],
+                                                                       [],
+                                                                       0
+                                                                       )
+      
         for sock in ready_to_read:
-            # a new connection request recived
-            if sock == socket_tcp:
-                sockfd, addr = socket_tcp.accept()
+            # a new connection request recieved
+            if sock == tcp_socket: 
+                sockfd, addr = tcp_socket.accept()
                 socket_list.append(sockfd)
-                print("Connected")
-
-                broadcast(socket_tcp, sockfd, str(addr) + " : " + str(addr) + " entered the chat room\n")
+                print "Client (%s, %s) connected" % addr
+                 
+                broadcast(tcp_socket, sockfd, "[%s:%s] entered our chatting room\n" % addr)
+             
+            # a message from a client, not a new connection
             else:
+                # process data recieved from client, 
                 try:
-                     # process data taken form client
-                     data = sock.recv(RECV_BUFFER)
-                     if data:
-                         #there is somthing in socket
-                         broadcast(socket_tcp, sock, "\r" + "[" + str(sock.getpeername()) + "] " + data)
-                     else:
-                         if sock in socket_list:
-                             socket_list.remove(sock)
+                    # receiving data from the socket.
+                    data = sock.recv(BufferSize)
+                    if data:
+                        # there is something in the socket
+                        broadcast(tcp_socket, sock, "\r" + '[' + str(sock.getpeername()) + '] ' + data)  
+                    else:
+                        # remove the socket that's broken    
+                        if sock in socket_list:
+                            socket_list.remove(sock)
 
-                         # this means that the connect is prob broken! thus close connection
-                         broadcase(socket_tcp,sock, "Client " + str(addr) + " : " + str(addr) + " is offline")
+                        # at this stage, no data means probably the connection has been broken
+                        broadcast(tcp_socket, sock, "Client (%s, %s) is offline\n" % addr) 
 
+                # exception 
                 except:
-                    broadcast(socket_tcp,"Client " + addr + " : " + addr + " is offline")
+                    broadcast(tcp_socket, sock, "Client (%s, %s) is offline\n" % addr)
                     continue
-            socket_tcp.close()
 
-
-
-def broadcast (server_socket, sock, message):
+    tcp_socket.close()
+    
+# broadcast chat messages to all connected clients
+def broadcast (tcp_socket, sock, message):
     for socket in socket_list:
-        # send message to spespic person
-        if socket != server_socket and sock != sock :
-            try:
+        # send the message only to peer
+        if socket != tcp_socket and socket != sock :
+            try :
                 socket.send(message)
-            except:
-                #broken socket connection
+            except :
+                # broken socket connection
                 socket.close()
+                # broken socket, remove it
                 if socket in socket_list:
                     socket_list.remove(socket)
-
+ 
 if __name__ == "__main__":
-    sys.exit(server())
 
+    sys.exit(chat_server())
 
     
 
