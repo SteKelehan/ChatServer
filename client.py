@@ -12,7 +12,8 @@ def chat_client():
 
     host = sys.argv[1]
     port = int(sys.argv[2])
-     
+
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(2)
      
